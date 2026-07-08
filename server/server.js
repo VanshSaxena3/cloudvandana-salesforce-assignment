@@ -8,6 +8,8 @@ const crypto = require("crypto");
 
 const app = express();
 
+app.set("trust proxy", 1); // zaroori hai Render jaise proxy ke peeche secure cookies ke liye
+
 app.use(cors({ 
   origin: ["http://localhost:3000", "https://cloudvandana-salesforce-assignment.vercel.app"], 
   credentials: true 
@@ -19,7 +21,11 @@ app.use(
     secret: "cloudvandana_secret",
     resave: false,
     saveUninitialized: true,
-    cookie: { httpOnly: true },
+    cookie: { 
+      httpOnly: true,
+      secure: true,        // HTTPS ke liye zaroori
+      sameSite: "none",    // cross-site cookie allow karega
+    },
   })
 );
 
@@ -104,7 +110,7 @@ app.get("/auth/callback", async (req, res) => {
     req.session.instanceUrl = data.instance_url;
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-res.redirect(`${frontendUrl}?login=success`);
+    res.redirect(`${frontendUrl}?login=success`);
   } catch (err) {
     console.error(err);
     res.status(500).send("OAuth Error");
