@@ -8,7 +8,10 @@ const crypto = require("crypto");
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ 
+  origin: ["http://localhost:3000", "https://cloudvandana-salesforce-assignment.vercel.app"], 
+  credentials: true 
+}));
 app.use(express.json());
 
 app.use(
@@ -100,7 +103,8 @@ app.get("/auth/callback", async (req, res) => {
     req.session.accessToken = data.access_token;
     req.session.instanceUrl = data.instance_url;
 
-    res.redirect("http://localhost:3000?login=success");
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+res.redirect(`${frontendUrl}?login=success`);
   } catch (err) {
     console.error(err);
     res.status(500).send("OAuth Error");
