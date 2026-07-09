@@ -63,8 +63,12 @@ app.get("/login", (req, res) => {
 
   req.session.codeVerifier = codeVerifier;
 
+  // Dynamic login URL: ?env=sandbox se test.salesforce.com use hoga, warna production
+  const envType = req.query.env === "sandbox" ? "https://test.salesforce.com" : "https://login.salesforce.com";
+  req.session.loginUrl = envType; // callback me bhi yehi URL use karna hoga
+
   const authUrl =
-    `${process.env.LOGIN_URL}/services/oauth2/authorize` +
+    `${envType}/services/oauth2/authorize` +
     `?response_type=code` +
     `&client_id=${process.env.CLIENT_ID}` +
     `&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}` +
@@ -92,7 +96,8 @@ app.get("/auth/callback", async (req, res) => {
     params.append("redirect_uri", process.env.REDIRECT_URI);
     params.append("code_verifier", codeVerifier);
 
-    const response = await fetch(`${process.env.LOGIN_URL}/services/oauth2/token`, {
+    const loginUrl = req.session.loginUrl || "https://login.salesforce.com";
+    const response = await fetch(`${loginUrl}/services/oauth2/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params,

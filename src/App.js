@@ -26,9 +26,10 @@ useEffect(() => {
     .catch(() => setLoggedIn(false));
 }, []);
 
-  const login = () => {
-    window.location.href = `${API_BASE}/login`;
-  };
+  const login = (env = "production") => {
+  const query = env === "sandbox" ? "?env=sandbox" : "";
+  window.location.href = `${API_BASE}/login${query}`;
+};
 
   const fetchRules = async () => {
     setLoading(true);
@@ -100,8 +101,13 @@ useEffect(() => {
       <h1>CloudVandana Salesforce Assignment</h1>
 
       {!loggedIn ? (
-        <button onClick={login}>Login with Salesforce</button>
-      ) : (
+  <div>
+    <button onClick={() => login("production")}>Login with Salesforce (Production)</button>
+    <button onClick={() => login("sandbox")} style={{ marginLeft: "10px" }}>
+      Login with Salesforce (Sandbox)
+    </button>
+  </div>
+  ) : (
         <>
           <p style={{ color: "green" }}>✅ Logged in to Salesforce</p>
           {userInfo && (
