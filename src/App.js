@@ -5,18 +5,26 @@ const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [pendingChanges, setPendingChanges] = useState({});
 
   // Check login status on page load
-  useEffect(() => {
-    fetch(`${API_BASE}/status`, { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setLoggedIn(data.loggedIn))
-      .catch(() => setLoggedIn(false));
-  }, []);
+useEffect(() => {
+  fetch(`${API_BASE}/status`, { credentials: "include" })
+    .then((res) => res.json())
+    .then((data) => {
+      setLoggedIn(data.loggedIn);
+      if (data.loggedIn) {
+        fetch(`${API_BASE}/user-info`, { credentials: "include" })
+          .then((res) => res.json())
+          .then((info) => setUserInfo(info));
+      }
+    })
+    .catch(() => setLoggedIn(false));
+}, []);
 
   const login = () => {
     window.location.href = `${API_BASE}/login`;
@@ -96,6 +104,11 @@ function App() {
       ) : (
         <>
           <p style={{ color: "green" }}>✅ Logged in to Salesforce</p>
+          {userInfo && (
+  <p style={{ fontSize: "14px", color: "#555" }}>
+    👤 {userInfo.username} &nbsp;|&nbsp; 🏢 Org ID: {userInfo.organizationId}
+  </p>
+)}
 
           <button onClick={fetchRules} disabled={loading}>
             {loading ? "Loading..." : "Get Validation Rules"}

@@ -22,10 +22,10 @@ app.use(
     resave: false,
     saveUninitialized: true,
     cookie: { 
-      httpOnly: true,
-      secure: true,        // HTTPS ke liye zaroori
-      sameSite: "none",    // cross-site cookie allow karega
-    },
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+},
   })
 );
 
@@ -213,7 +213,26 @@ app.post("/validation-rules/bulk-toggle", async (req, res) => {
 app.get("/status", (req, res) => {
   res.json({ loggedIn: !!req.session.accessToken });
 });
-
+// GET current user + org info
+app.get("/user-info", async (req, res) => {
+  if (!req.session.accessToken) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+  try {
+    const response = await fetch(`${req.session.instanceUrl}/services/oauth2/userinfo`, {
+      headers: { Authorization: `Bearer ${req.session.accessToken}` },
+    });
+    const data = await response.json();
+    res.json({
+      username: data.preferred_username || data.email,
+      organizationId: data.organization_id,
+      instanceUrl: req.session.instanceUrl,
+      displayName: data.name,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.listen(process.env.PORT || 5000, () => {
   console.log(`Server running on port ${process.env.PORT || 5000}`);
 });
